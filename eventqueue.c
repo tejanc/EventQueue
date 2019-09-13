@@ -8,7 +8,7 @@
 
 // Compile with -pthread
 // Create a mutex that is ready to be locked.
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t static mutex = PTHREAD_MUTEX_INITIALIZER;
 
 event_queue_t * queue;
 
@@ -71,12 +71,14 @@ void event_queue_destroy(event_queue_t *eq) {
 int event_queue_add_event(event_queue_t *eq, event_t *event) {
 
     event_t *tmp, *head;
-    int eventSize, queueSize;
 
     tmp = (event_t *)malloc(sizeof(event_t));
     tmp = event;
     tmp->next = NULL;
 
+    //head = (event_t *)malloc(sizeof(event_t));
+    if (eq == NULL)
+        return -1;
     head = eq->head;
 
     // ENTER CRITICAL SECTION
@@ -123,17 +125,20 @@ event_t * event_queue_get_event(event_queue_t *eq) {
 
     event_t *tmp;
     tmp = (event_t *) malloc(sizeof(event_t));
-    tmp = queue->head;
+    tmp = eq->head;
 
     retVal = event_queue_event_release(eq, eq->head);
 
+    // EXIT CRITICAL SECTION
+    pthread_mutex_unlock(&mutex);
+    
+    
     if (retVal != 0) {
         printf("Error while releasing event.\n");
         return NULL;
     }
 
-    // EXIT CRITICAL SECTION
-    pthread_mutex_unlock(&mutex);
+
 
     //pthread_exit(&tmp);
 
